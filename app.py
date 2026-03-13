@@ -258,9 +258,9 @@ if st.button("Tarama Başlat (biraz zaman alabilir)"):
                 st.write(f"Chunk hatası: {str(e)[:80]}")
                 time.sleep(30)
             
-            time.sleep(SLEEP_CHUNK)
+                                    time.sleep(SLEEP_CHUNK)
 
-      if rows:
+    if rows:
         df = pd.DataFrame(rows).sort_values("Pearson", ascending=False)
         st.success(f"{len(df)} sonuç bulundu!")
         st.dataframe(df)
@@ -290,14 +290,14 @@ if st.button("Tarama Başlat (biraz zaman alabilir)"):
             for c_idx, value in enumerate(row, 1):
                 ws.cell(row=r_idx, column=c_idx, value=value)
 
-        # Stil uygulama (orijinal kodundan uyarlanmış)
+        # Stil uygulama
         critical_fill = PatternFill("solid", fgColor="BBDEFB")   # açık mavi - kritik
         strong_fill   = PatternFill("solid", fgColor="E8F5E9")   # açık yeşil - güçlü
 
         goldr_col_idx = df.columns.get_loc("GOLDR Durumu") + 1
         yorum_col_idx = df.columns.get_loc("Yorum") + 1
 
-        for row_idx in range(2, len(df) + 2):  # 2. satırdan başla (başlık 1. satır)
+        for row_idx in range(2, len(df) + 2):
             yorum = str(ws.cell(row=row_idx, column=yorum_col_idx).value or "")
             goldr = str(ws.cell(row=row_idx, column=goldr_col_idx).value or "")
 
@@ -353,5 +353,8 @@ if st.button("Tarama Başlat (biraz zaman alabilir)"):
 
     else:
         st.warning("Sonuç bulunamadı.")
-st.info("Not: İlk tarama yavaş olabilir. yfinance verileri internetten çekiliyor.")
 
+# ────────────────────────────────────────────────
+# Dosya sonu - ekstra bir şey eklemek istersen buraya koyabilirsin
+# ────────────────────────────────────────────────
+st.info("Uygulama başarıyla çalıştı. Tarama sonuçlarını Excel olarak indirebilirsiniz.")
