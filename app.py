@@ -15,7 +15,7 @@ GOLDR_FACTOR    = 3.0
 GOLDR_ATR_PERIOD = 10
 
 # ================================================================
-# AKTİF BIST LİSTE (senin orijinal listen)
+# AKTİF BIST LİSTE
 # ================================================================
 symbols = [
     'A1CAP.IS','A1YAT.IS','ACSEL.IS','ADEL.IS','ADESE.IS','ADGYO.IS','AEFES.IS','AFYON.IS','AGESA.IS','AGHOL.IS',
@@ -66,7 +66,7 @@ symbols = [
 ]
 
 # ================================================================
-# FONKSİYONLAR (senin orijinal kodundan)
+# FONKSİYONLAR
 # ================================================================
 def calc(close, period):
     if len(close) < period: return None
@@ -137,7 +137,7 @@ def check_password():
     password = st.text_input("Şifreyi girin", type="password")
 
     if st.button("Giriş"):
-        # BURADAKİ ŞİFREYİ KENDİ İSTEDİĞİN GİBİ DEĞİŞTİR
+        # BURADAKİ ŞİFREYİ İSTEDİĞİN GİBİ DEĞİŞTİR
         if password == "goldr2026tr":
             st.session_state.authenticated = True
             st.success("Giriş başarılı!")
@@ -258,16 +258,14 @@ if st.button("Tarama Başlat (biraz zaman alabilir)"):
                 st.write(f"Chunk hatası: {str(e)[:80]}")
                 time.sleep(30)
             
-                                    time.sleep(SLEEP_CHUNK)
+            time.sleep(SLEEP_CHUNK)
 
     if rows:
         df = pd.DataFrame(rows).sort_values("Pearson", ascending=False)
         st.success(f"{len(df)} sonuç bulundu!")
         st.dataframe(df)
 
-        # ────────────────────────────────────────────────
-        # Gerçek Excel (.xlsx) indirme + orijinal stil (mavi/yeşil boyama, satır yüksekliği vs.)
-        # ────────────────────────────────────────────────
+        # Gerçek Excel (.xlsx) indirme + stil
         import io
         from openpyxl import Workbook
         from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
@@ -278,21 +276,21 @@ if st.button("Tarama Başlat (biraz zaman alabilir)"):
         ws = wb.active
         ws.title = "Tarama Sonuçları"
 
-        # Başlık satırını yaz
+        # Başlık satırı
         for col_num, column_title in enumerate(df.columns, 1):
             cell = ws.cell(row=1, column=col_num, value=column_title)
             cell.font = Font(bold=True, color="FFFFFF")
-            cell.fill = PatternFill("solid", fgColor="37474F")  # koyu gri-mavi başlık
+            cell.fill = PatternFill("solid", fgColor="37474F")
             cell.alignment = Alignment(horizontal="center")
 
-        # Verileri yaz
+        # Veriler
         for r_idx, row in enumerate(dataframe_to_rows(df, index=False, header=False), 2):
             for c_idx, value in enumerate(row, 1):
                 ws.cell(row=r_idx, column=c_idx, value=value)
 
-        # Stil uygulama
-        critical_fill = PatternFill("solid", fgColor="BBDEFB")   # açık mavi - kritik
-        strong_fill   = PatternFill("solid", fgColor="E8F5E9")   # açık yeşil - güçlü
+        # Stil
+        critical_fill = PatternFill("solid", fgColor="BBDEFB")
+        strong_fill   = PatternFill("solid", fgColor="E8F5E9")
 
         goldr_col_idx = df.columns.get_loc("GOLDR Durumu") + 1
         yorum_col_idx = df.columns.get_loc("Yorum") + 1
@@ -311,32 +309,25 @@ if st.button("Tarama Başlat (biraz zaman alabilir)"):
 
             if fill_color:
                 for col_idx in range(1, len(df.columns) + 1):
-                    cell = ws.cell(row=row_idx, column=col_idx)
-                    cell.fill = fill_color
+                    ws.cell(row=row_idx, column=col_idx).fill = fill_color
 
-            # Tüm hücrelere ince kenarlık
-            thin_border = Border(left=Side(style='thin'), 
-                                 right=Side(style='thin'), 
-                                 top=Side(style='thin'), 
-                                 bottom=Side(style='thin'))
+            thin_border = Border(left=Side('thin'), right=Side('thin'), top=Side('thin'), bottom=Side('thin'))
             for col_idx in range(1, len(df.columns) + 1):
-                cell = ws.cell(row=row_idx, column=col_idx)
-                cell.border = thin_border
+                ws.cell(row=row_idx, column=col_idx).border = thin_border
 
-        # Sütun genişliklerini otomatik ayarla
+        # Sütun genişlikleri
         for col in ws.columns:
             max_length = 0
-            column = col[0].column_letter
+            column_letter = col[0].column_letter
             for cell in col:
                 try:
                     if len(str(cell.value)) > max_length:
                         max_length = len(cell.value)
                 except:
                     pass
-            adjusted_width = (max_length + 6)
-            ws.column_dimensions[column].width = min(adjusted_width, 90)
+            ws.column_dimensions[column_letter].width = min(max_length + 6, 90)
 
-        # Yorum sütununu wrap text yap
+        # Yorum sütunu wrap text
         for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=yorum_col_idx, max_col=yorum_col_idx):
             for cell in row:
                 cell.alignment = Alignment(wrap_text=True, vertical="center")
@@ -354,7 +345,4 @@ if st.button("Tarama Başlat (biraz zaman alabilir)"):
     else:
         st.warning("Sonuç bulunamadı.")
 
-# ────────────────────────────────────────────────
-# Dosya sonu - ekstra bir şey eklemek istersen buraya koyabilirsin
-# ────────────────────────────────────────────────
 st.info("Uygulama başarıyla çalıştı. Tarama sonuçlarını Excel olarak indirebilirsiniz.")
