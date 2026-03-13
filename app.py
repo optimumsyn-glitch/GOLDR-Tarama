@@ -260,99 +260,98 @@ if st.button("Tarama Başlat (biraz zaman alabilir)"):
             
             time.sleep(SLEEP_CHUNK)
 
-   if rows:
-    df = pd.DataFrame(rows).sort_values("Pearson", ascending=False)
-    st.success(f"{len(df)} sonuç bulundu!")
-    st.dataframe(df)
+      if rows:
+        df = pd.DataFrame(rows).sort_values("Pearson", ascending=False)
+        st.success(f"{len(df)} sonuç bulundu!")
+        st.dataframe(df)
 
-    # ────────────────────────────────────────────────
-    # Gerçek Excel (.xlsx) indirme + orijinal stil (mavi/yeşil boyama, satır yüksekliği vs.)
-    # ────────────────────────────────────────────────
-    import io
-    from openpyxl import Workbook
-    from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
-    from openpyxl.utils.dataframe import dataframe_to_rows
+        # ────────────────────────────────────────────────
+        # Gerçek Excel (.xlsx) indirme + orijinal stil (mavi/yeşil boyama, satır yüksekliği vs.)
+        # ────────────────────────────────────────────────
+        import io
+        from openpyxl import Workbook
+        from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
+        from openpyxl.utils.dataframe import dataframe_to_rows
 
-    output = io.BytesIO()
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Tarama Sonuçları"
+        output = io.BytesIO()
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Tarama Sonuçları"
 
-    # Başlık satırını yaz
-    for col_num, column_title in enumerate(df.columns, 1):
-        cell = ws.cell(row=1, column=col_num, value=column_title)
-        cell.font = Font(bold=True, color="FFFFFF")
-        cell.fill = PatternFill("solid", fgColor="37474F")  # koyu gri-mavi başlık
-        cell.alignment = Alignment(horizontal="center")
+        # Başlık satırını yaz
+        for col_num, column_title in enumerate(df.columns, 1):
+            cell = ws.cell(row=1, column=col_num, value=column_title)
+            cell.font = Font(bold=True, color="FFFFFF")
+            cell.fill = PatternFill("solid", fgColor="37474F")  # koyu gri-mavi başlık
+            cell.alignment = Alignment(horizontal="center")
 
-    # Verileri yaz
-    for r_idx, row in enumerate(dataframe_to_rows(df, index=False, header=False), 2):
-        for c_idx, value in enumerate(row, 1):
-            ws.cell(row=r_idx, column=c_idx, value=value)
+        # Verileri yaz
+        for r_idx, row in enumerate(dataframe_to_rows(df, index=False, header=False), 2):
+            for c_idx, value in enumerate(row, 1):
+                ws.cell(row=r_idx, column=c_idx, value=value)
 
-    # Stil uygulama (orijinal kodundan uyarlanmış)
-    critical_fill = PatternFill("solid", fgColor="BBDEFB")   # açık mavi - kritik
-    strong_fill   = PatternFill("solid", fgColor="E8F5E9")   # açık yeşil - güçlü
+        # Stil uygulama (orijinal kodundan uyarlanmış)
+        critical_fill = PatternFill("solid", fgColor="BBDEFB")   # açık mavi - kritik
+        strong_fill   = PatternFill("solid", fgColor="E8F5E9")   # açık yeşil - güçlü
 
-    goldr_col_idx = df.columns.get_loc("GOLDR Durumu") + 1
-    yorum_col_idx = df.columns.get_loc("Yorum") + 1
+        goldr_col_idx = df.columns.get_loc("GOLDR Durumu") + 1
+        yorum_col_idx = df.columns.get_loc("Yorum") + 1
 
-    for row_idx in range(2, len(df) + 2):  # 2. satırdan başla (başlık 1. satır)
-        yorum = str(ws.cell(row=row_idx, column=yorum_col_idx).value or "")
-        goldr = str(ws.cell(row=row_idx, column=goldr_col_idx).value or "")
+        for row_idx in range(2, len(df) + 2):  # 2. satırdan başla (başlık 1. satır)
+            yorum = str(ws.cell(row=row_idx, column=yorum_col_idx).value or "")
+            goldr = str(ws.cell(row=row_idx, column=goldr_col_idx).value or "")
 
-        is_critical = "Kritik" in yorum or "Yeni Yukarı Dönüş" in goldr
-        is_strong   = "Güçlü" in yorum
+            is_critical = "Kritik" in yorum or "Yeni Yukarı Dönüş" in goldr
+            is_strong   = "Güçlü" in yorum
 
-        row_height = 80 if is_critical else 55 if is_strong else 40
-        ws.row_dimensions[row_idx].height = row_height
+            row_height = 80 if is_critical else 55 if is_strong else 40
+            ws.row_dimensions[row_idx].height = row_height
 
-        fill_color = critical_fill if is_critical else strong_fill if is_strong else None
+            fill_color = critical_fill if is_critical else strong_fill if is_strong else None
 
-        if fill_color:
+            if fill_color:
+                for col_idx in range(1, len(df.columns) + 1):
+                    cell = ws.cell(row=row_idx, column=col_idx)
+                    cell.fill = fill_color
+
+            # Tüm hücrelere ince kenarlık
+            thin_border = Border(left=Side(style='thin'), 
+                                 right=Side(style='thin'), 
+                                 top=Side(style='thin'), 
+                                 bottom=Side(style='thin'))
             for col_idx in range(1, len(df.columns) + 1):
                 cell = ws.cell(row=row_idx, column=col_idx)
-                cell.fill = fill_color
+                cell.border = thin_border
 
-        # Tüm hücrelere ince kenarlık
-        thin_border = Border(left=Side(style='thin'), 
-                             right=Side(style='thin'), 
-                             top=Side(style='thin'), 
-                             bottom=Side(style='thin'))
-        for col_idx in range(1, len(df.columns) + 1):
-            cell = ws.cell(row=row_idx, column=col_idx)
-            cell.border = thin_border
+        # Sütun genişliklerini otomatik ayarla
+        for col in ws.columns:
+            max_length = 0
+            column = col[0].column_letter
+            for cell in col:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(cell.value)
+                except:
+                    pass
+            adjusted_width = (max_length + 6)
+            ws.column_dimensions[column].width = min(adjusted_width, 90)
 
-    # Sütun genişliklerini otomatik ayarla
-    for col in ws.columns:
-        max_length = 0
-        column = col[0].column_letter
-        for cell in col:
-            try:
-                if len(str(cell.value)) > max_length:
-                    max_length = len(cell.value)
-            except:
-                pass
-        adjusted_width = (max_length + 6)
-        ws.column_dimensions[column].width = min(adjusted_width, 90)
+        # Yorum sütununu wrap text yap
+        for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=yorum_col_idx, max_col=yorum_col_idx):
+            for cell in row:
+                cell.alignment = Alignment(wrap_text=True, vertical="center")
 
-    # Yorum sütununu wrap text yap
-    for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=yorum_col_idx, max_col=yorum_col_idx):
-        for cell in row:
-            cell.alignment = Alignment(wrap_text=True, vertical="center")
+        wb.save(output)
+        output.seek(0)
 
-    wb.save(output)
-    output.seek(0)
+        st.download_button(
+            label="Stilli Excel (.xlsx) indir (mavi/yeşil boyalı)",
+            data=output,
+            file_name="goldr_tarama_sonuclari_stilli.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
-    st.download_button(
-        label="Stilli Excel (.xlsx) indir (mavi/yeşil boyalı)",
-        data=output,
-        file_name="goldr_tarama_sonuclari_stilli.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-
-else:
-    st.warning("Sonuç bulunamadı.")
-
-
+    else:
+        st.warning("Sonuç bulunamadı.")
 st.info("Not: İlk tarama yavaş olabilir. yfinance verileri internetten çekiliyor.")
+
